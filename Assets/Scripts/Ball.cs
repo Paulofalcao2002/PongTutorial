@@ -8,6 +8,7 @@ public class Ball : MonoBehaviour
     public float speed;
     public Rigidbody2D rb;
     public Vector3 startPosition;
+    public int id;
 
 
     // Start is called before the first frame update

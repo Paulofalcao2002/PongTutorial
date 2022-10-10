@@ -2,11 +2,15 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
 
     public GameObject ball;
+    List<GameObject> balls = new List<GameObject>();
+
+    public Vector3 startPosition;
 
     public GameObject player1Paddle;
     public GameObject player1Goal;
@@ -19,21 +23,68 @@ public class GameManager : MonoBehaviour
 
     private int Player1Score;
     private int Player2Score;
-    
-    public void Player1Scored(){
-        Player1Score++;
-        Player1Text.GetComponent<TextMeshProUGUI>().text = Player1Score.ToString();
-        ResetPosition();
+
+    private int ballLimit;
+    private int nextBallId;
+
+    void Start()
+    {
+        startPosition = ball.GetComponent<Ball>().startPosition;
+        balls.Add(ball);
+        ballLimit = 2;
+        nextBallId = 2;
     }
-    public void Player2Scored(){
+    
+    public void Player1Scored(Collider2D collision){
+        Player1Score++;
+        if (Player1Score == 10) {
+            SceneManager.LoadScene("P1End");
+        }
+        Player1Text.GetComponent<TextMeshProUGUI>().text = Player1Score.ToString();
+        randomBall(collision);
+        ResetPosition(collision);
+    }
+    public void Player2Scored(Collider2D collision){
         Player2Score++;
+        if (Player2Score == 10) {
+            SceneManager.LoadScene("P2End");
+        }
         Player2Text.GetComponent<TextMeshProUGUI>().text = Player2Score.ToString();
-        ResetPosition();
+        randomBall(collision);    
+        ResetPosition(collision);
     }
 
-    private void ResetPosition()
+    private void randomBall(Collider2D collision) 
     {
-        ball.GetComponent<Ball>().Reset();
+        int rnd = Random.Range(0,2);
+
+        if (balls.Count <= ballLimit && rnd == 0) 
+        {   
+            GameObject newBall = Instantiate(ball, startPosition, Quaternion.identity);
+            newBall.GetComponent<Ball>().id = nextBallId;
+            nextBallId++;
+            balls.Add(newBall);
+        } else if (balls.Count > 1 && rnd == 1 && collision.GetComponent<Ball>().id != ball.GetComponent<Ball>().id) {
+            for (int i = 0; i < balls.Count; i++)
+            {
+                if (collision.GetComponent<Ball>().id == balls[i].GetComponent<Ball>().id )
+                {
+                    Destroy(balls[i].GetComponent<Ball>());
+                    balls.RemoveAt(i);
+                }   
+            }
+        }
+    }
+
+    private void ResetPosition(Collider2D collision)
+    {   
+        for (int i = 0; i < balls.Count; i++)
+        {
+            if (collision.GetComponent<Ball>().id == balls[i].GetComponent<Ball>().id)
+            {
+                balls[i].GetComponent<Ball>().Reset();
+            }   
+        }
         player1Paddle.GetComponent<PlayerMovement>().Reset();
         player2Paddle.GetComponent<PlayerMovement>().Reset();
     }
